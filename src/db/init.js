@@ -7,21 +7,29 @@
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('./src/db/farmilusion.db');
 
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS products (
-    id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL,
-    material TEXT NOT NULL,
-    weight REAL NOT NULL
-  )`);
+// db.serialize(() => {
+//   db.run(`CREATE TABLE IF NOT EXISTS products (
+//     id INTEGER PRIMARY KEY,
+//     name TEXT NOT NULL,
+//     material TEXT NOT NULL,
+//     weight REAL NOT NULL
+//   )`);
 
-  db.run(`DELETE FROM products`);
+//   db.run(`DELETE FROM products`);
 
-  const stmt = db.prepare("INSERT INTO products (id, name, material, weight) VALUES (?, ?, ?, ?)");
-  stmt.run(1, "Mario", "PLA", 0.100);
-  stmt.run(2, "Zelda", "PLA", 0.150);
-  stmt.run(3, "Luigi", "PLA", 0.1);
-  stmt.finalize();
-});
+//   const stmt = db.prepare("INSERT INTO products (id, name, material, weight) VALUES (?, ?, ?, ?)");
+//   stmt.run(1, "Mario", "PLA", 0.100);
+//   stmt.run(2, "Zelda", "PLA", 0.150);
+//   stmt.run(3, "Luigi", "PLA", 0.1);
+//   stmt.finalize();
+// });
+
+// // -- Add this to your db/init.js or run in SQLite CLI
+// CREATE TABLE IF NOT EXISTS photos (
+//   id INTEGER PRIMARY KEY AUTOINCREMENT,
+//   product_id INTEGER NOT NULL,
+//   url TEXT NOT NULL,
+//   FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
+// );
 
 db.close();
