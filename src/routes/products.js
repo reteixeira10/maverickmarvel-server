@@ -4,30 +4,36 @@ const db = require('../db/farmilusion');
 const multer = require('multer');
 const upload = multer();
 
-// Get all products
+// Get all products with only the first photo for each product
 router.get('/', (req, res) => {
   db.all('SELECT * FROM products', [], (err, products) => {
     if (err) return res.status(500).json({ error: err.message });
     if (products.length === 0) return res.json([]);
     const productIds = products.map(p => p.id);
     db.all(
-      `SELECT * FROM productsphotos WHERE product_id IN (${productIds.map(() => '?').join(',')})`,
+      `SELECT p1.*
+         FROM productsphotos p1
+         INNER JOIN (
+           SELECT product_id, MIN(id) as min_id
+           FROM productsphotos
+           WHERE product_id IN (${productIds.map(() => '?').join(',')})
+           GROUP BY product_id
+         ) p2 ON p1.product_id = p2.product_id AND p1.id = p2.min_id`,
       productIds,
       (err, photos) => {
         if (err) return res.status(500).json({ error: err.message });
-        const photosByProduct = {};
+        const photoByProduct = {};
         photos.forEach(photo => {
-          if (!photosByProduct[photo.product_id]) photosByProduct[photo.product_id] = [];
-          photosByProduct[photo.product_id].push({
+          photoByProduct[photo.product_id] = {
             id: photo.id,
             filename: photo.filename,
             mimetype: photo.mimetype,
             image: `data:${photo.mimetype};base64,${photo.image.toString('base64')}`
-          });
+          };
         });
         const result = products.map(product => ({
           ...product,
-          photos: photosByProduct[product.id] || []
+          photo: photoByProduct[product.id] || null
         }));
         res.json(result);
       }

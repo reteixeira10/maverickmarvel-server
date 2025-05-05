@@ -4,7 +4,8 @@
   "description": "A simple Express.js server to deliver user data as JSON.",
   "main": "src/app.js",
   "scripts": {
-    "start": "node src/app.js"
+    "start": "node src/app.js",
+    "init-db": "node src/db/init.js"
   },
   "dependencies": {
     "express": "^4.17.1",

@@ -1,35 +1,42 @@
 // This script initializes the SQLite database for the Farmilusion project.
-// It creates a table for products and populates it with some initial data.
-// The database file is located at ./src/db/farmilusion.db.
-// The script uses the sqlite3 library to interact with the SQLite database.
-// It creates a table named 'products' with columns for id, name, material, and weight.
+// It creates the necessary tables for products and product photos.
+// Run this script once to set up the database schema.
+
+// A PRIORI TEM QUE EXECUTAR ESSE ARQUIVO NA UNHA UMA VEZ QUANDO FAZER O DEPLOYMENT COMO O COMANDO NO SSH DO SERVER
+//node src/db/init.js OU npm run init-db
+//You only need to do this once, unless you change your schema.
+
+
+
 
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('./src/db/farmilusion.db');
 
-// db.serialize(() => {
-//   db.run(`CREATE TABLE IF NOT EXISTS products (
-//     id INTEGER PRIMARY KEY,
-//     name TEXT NOT NULL,
-//     material TEXT NOT NULL,
-//     weight REAL NOT NULL
-//   )`);
+// Enable foreign key constraints
+db.serialize(() => {
+  db.run('PRAGMA foreign_keys = ON');
 
-//   db.run(`DELETE FROM products`);
+  // Create products table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS products (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      material TEXT NOT NULL,
+      weight REAL NOT NULL
+    )
+  `);
 
-//   const stmt = db.prepare("INSERT INTO products (id, name, material, weight) VALUES (?, ?, ?, ?)");
-//   stmt.run(1, "Mario", "PLA", 0.100);
-//   stmt.run(2, "Zelda", "PLA", 0.150);
-//   stmt.run(3, "Luigi", "PLA", 0.1);
-//   stmt.finalize();
-// });
-
-// // -- Add this to your db/init.js or run in SQLite CLI
-// CREATE TABLE IF NOT EXISTS photos (
-//   id INTEGER PRIMARY KEY AUTOINCREMENT,
-//   product_id INTEGER NOT NULL,
-//   url TEXT NOT NULL,
-//   FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
-// );
+  // Create productsphotos table with ON DELETE CASCADE
+  db.run(`
+    CREATE TABLE IF NOT EXISTS productsphotos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL,
+      image BLOB NOT NULL,
+      filename TEXT,
+      mimetype TEXT,
+      FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
+    )
+  `);
+});
 
 db.close();
