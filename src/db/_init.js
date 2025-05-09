@@ -6,7 +6,7 @@
 //node src/db/init.js OU npm run init-db
 //You only need to do this once, unless you change your schema.
 
-
+//OBSOLETO
 
 
 const sqlite3 = require('sqlite3').verbose();
