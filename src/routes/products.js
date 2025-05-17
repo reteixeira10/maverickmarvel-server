@@ -47,6 +47,39 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get a single product with all its photos
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Get product
+    const productResult = await db.execute({
+      sql: 'SELECT * FROM products WHERE id = ?',
+      args: [id],
+    });
+    if (productResult.rows.length === 0) {
+      return res.status(404).json({ error: "Product not found." });
+    }
+    const product = productResult.rows[0];
+
+    // Get all photos for this product
+    const photosResult = await db.execute({
+      sql: 'SELECT * FROM productsphotos WHERE product_id = ? ORDER BY id ASC',
+      args: [id],
+    });
+    const photos = photosResult.rows.map(photo => ({
+      id: photo.id,
+      filename: photo.filename,
+      mimetype: photo.mimetype,
+      image: `data:${photo.mimetype};base64,${Buffer.from(photo.image).toString('base64')}`
+    }));
+
+    res.json({ ...product, photos });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to retrieve product' });
+  }
+});
+
 // Insert a new product
 router.post('/', upload.array('photos'), async (req, res) => {
   const { name, material, weight } = req.body;
