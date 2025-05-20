@@ -112,6 +112,61 @@ router.post('/', upload.array('photos'), async (req, res) => {
   }
 });
 
+
+
+// Update a product and its photos
+router.put('/:id', upload.array('photos'), async (req, res) => {
+  const { id } = req.params;
+  const { name, material, weight } = req.body;
+  let keepPhotos = req.body.keepPhotos || [];
+  if (!Array.isArray(keepPhotos)) keepPhotos = keepPhotos ? [keepPhotos] : [];
+
+  try {
+    // Update product data
+    await db.execute({
+      sql: 'UPDATE products SET name = ?, material = ?, weight = ? WHERE id = ?',
+      args: [name, material, weight, id],
+    });
+
+    // Delete photos not in keepPhotos
+    if (keepPhotos.length > 0) {
+      await db.execute({
+        sql: `DELETE FROM productsphotos WHERE product_id = ? AND id NOT IN (${keepPhotos.map(() => '?').join(',')})`,
+        args: [id, ...keepPhotos],
+      });
+    } else {
+      await db.execute({
+        sql: `DELETE FROM productsphotos WHERE product_id = ?`,
+        args: [id],
+      });
+    }
+
+    // Add new photos
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        await db.execute({
+          sql: 'INSERT INTO productsphotos (product_id, image, filename, mimetype) VALUES (?, ?, ?, ?)',
+          args: [id, file.buffer, file.originalname, file.mimetype],
+        });
+      }
+    }
+
+    res.json({ message: "Product updated successfully." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update product' });
+  }
+});
+
+
+
+
+
+
+
+
+
+
 // Delete a product by id
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;

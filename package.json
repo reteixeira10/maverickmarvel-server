@@ -4,15 +4,13 @@
   "description": "A simple Express.js server to deliver user data as JSON.",
   "main": "src/app.js",
   "scripts": {
-    "start": "node src/app.js",
-    "init-db": "node src/db/init.js"
+    "start": "node src/app.js"
   },
   "dependencies": {
     "@libsql/client": "^0.15.4",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
-    "multer": "^1.4.5-lts.2",
-    "sqlite3": "^5.1.7"
+    "multer": "^1.4.5-lts.2"
   },
   "author": "",
   "license": "ISC"
