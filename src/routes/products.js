@@ -82,16 +82,24 @@ router.get('/:id', async (req, res) => {
 
 // Insert a new product
 router.post('/', upload.array('photos'), async (req, res) => {
-  const { name, material, weight } = req.body;
+  const {
+    name, material, weight, print_instruction, orders, origin, print_time,
+    category, SKU, cost, dimensions, copywriting, marketplace, colors, active
+  } = req.body;
   if (!name || !material || !weight) {
     return res.status(400).json({ error: "Name, material, and weight are required." });
   }
   try {
     const result = await db.execute({
-      sql: 'INSERT INTO products (name, material, weight) VALUES (?, ?, ?)',
-      args: [name, material, weight],
+      sql: `INSERT INTO products
+        (name, material, weight, print_instruction, orders, origin, print_time, category, SKU, cost, dimensions, copywriting, marketplace, colors, active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        name, material, weight, print_instruction, orders || 0, origin, print_time, category, SKU, cost, dimensions,
+        copywriting, marketplace, colors, active === "false" ? 0 : 1
+      ],
     });
-    const productId = result.lastInsertRowid;
+    const productId = result.lastInsertRowid.toString();
 
     // Save photos if any
     if (req.files && req.files.length > 0) {
@@ -102,30 +110,32 @@ router.post('/', upload.array('photos'), async (req, res) => {
         });
       }
     }
-    // res.status(201).json({ id: productId, name, material, weight }); gera erro
-    // res.status(201).json({ id: productId.toString(), name, material, weight });
-    //option
-    res.status(201).json({ id: Number(productId), name, material, weight });
+
+    res.status(201).json({ id: productId, name, material, weight });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to create product' });
   }
 });
 
-
-
 // Update a product and its photos
 router.put('/:id', upload.array('photos'), async (req, res) => {
   const { id } = req.params;
-  const { name, material, weight } = req.body;
+  const {
+    name, material, weight, print_instruction, orders, origin, print_time,
+    category, SKU, cost, dimensions, copywriting, marketplace, colors, active
+  } = req.body;
   let keepPhotos = req.body.keepPhotos || [];
   if (!Array.isArray(keepPhotos)) keepPhotos = keepPhotos ? [keepPhotos] : [];
-
   try {
-    // Update product data
     await db.execute({
-      sql: 'UPDATE products SET name = ?, material = ?, weight = ? WHERE id = ?',
-      args: [name, material, weight, id],
+      sql: `UPDATE products SET
+        name = ?, material = ?, weight = ?, print_instruction = ?, orders = ?, origin = ?, print_time = ?, category = ?, SKU = ?, cost = ?, dimensions = ?, copywriting = ?, marketplace = ?, colors = ?, active = ?
+        WHERE id = ?`,
+      args: [
+        name, material, weight, print_instruction, orders || 0, origin, print_time, category, SKU, cost, dimensions,
+        copywriting, marketplace, colors, active === "false" ? 0 : 1, id
+      ],
     });
 
     // Delete photos not in keepPhotos
@@ -157,15 +167,6 @@ router.put('/:id', upload.array('photos'), async (req, res) => {
     res.status(500).json({ error: 'Failed to update product' });
   }
 });
-
-
-
-
-
-
-
-
-
 
 // Delete a product by id
 router.delete('/:id', async (req, res) => {
