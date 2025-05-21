@@ -1,58 +1,58 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors'); // <<<< 1. Import cors at the top
+const cors = require('cors');
 const productsRouter = require('./routes/products');
 
 const app = express();
 
-const PORT = process.env.PORT || 5001; // Render will set process.env.PORT
+const PORT = process.env.PORT || 5001;
 
 // --- CORS Configuration ---
-// This should come BEFORE your routes
+const frontendUrlFromEnv = process.env.FRONTEND_URL; // Get it once
+
+// Log for debugging what your server sees from Render's environment
+console.log(`[CORS Setup] FRONTEND_URL from environment: ${frontendUrlFromEnv}`);
+
 const allowedOrigins = [
-  process.env.FRONTEND_URL,                 // For your Render.com frontend (set this in Render's env vars)
-  'http://localhost:3000',                // Common default for local React dev
-  'http://localhost:5173'                 // Common default for local Vite/React dev
-  // Add any other local development origins if needed
-].filter(Boolean); // filter(Boolean) removes any undefined/null if FRONTEND_URL isn't set locally
+  frontendUrlFromEnv, // For your Render.com frontend
+  'http://localhost:3000', // Common default for local React dev
+  'http://localhost:5173'  // Common default for local Vite/React dev
+].filter(Boolean); // filter(Boolean) removes undefined/null if FRONTEND_URL isn't set
+
+console.log(`[CORS Setup] Allowed origins configured: ${allowedOrigins.join(', ') || 'NONE (Check FRONTEND_URL env var!)'}`);
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests) during development or if explicitly allowed
-    // For production, you might want to be stricter and only allow if origin is in allowedOrigins
-    if (process.env.NODE_ENV !== 'production' && !origin) {
+    // If there's no origin (e.g., server-to-server, curl, Render health check), allow it.
+    // Browsers will always send an Origin header for actual cross-origin requests.
+    if (!origin) {
+      // console.log('[CORS] Request without origin header allowed (e.g., health check or server-to-server)');
       return callback(null, true);
     }
-    if (allowedOrigins.length === 0 && process.env.NODE_ENV !== 'production') {
-        // Fallback to allow all if no FRONTEND_URL is set and in development (be cautious)
-        // console.warn("CORS: Allowing all origins because FRONTEND_URL is not set and not in production.");
-        return callback(null, true);
-    }
+
+    // If an origin is present, check if it's in the allowed list.
     if (allowedOrigins.includes(origin)) {
+      // console.log(`[CORS] Origin ${origin} allowed.`);
       callback(null, true);
     } else {
-      // console.error(`CORS Error: Origin ${origin} not allowed.`); // Log the blocked origin for debugging
+      console.error(`[CORS Error] Origin ${origin} not allowed. Allowed origins list: [${allowedOrigins.join(', ')}]`);
       callback(new Error(`Origin ${origin} not allowed by CORS`));
     }
   }
 };
 
-app.use(cors(corsOptions)); // <<<< 2. Use cors middleware with specific options BEFORE routes
+app.use(cors(corsOptions));
 
 // --- Other Middleware ---
-app.use(express.json()); // For parsing application/json
+app.use(express.json());
 
 // --- Routes ---
-app.use('/api/products', productsRouter); // Your product routes
+app.use('/api/products', productsRouter);
 
-// Simple root route for health checks or basic info
 app.get('/', (req, res) => {
   res.send('Maverick Marvel Server is running!');
 });
 
 app.listen(PORT, () => {
-  // Important: In production on Render, it won't be localhost.
-  // Render exposes the app on its own network structure.
-  // This console log is mostly for local verification.
-  console.log(`Server running on port ${PORT}. Access locally if applicable.`);
+  console.log(`Server running on port ${PORT}.`);
 });
