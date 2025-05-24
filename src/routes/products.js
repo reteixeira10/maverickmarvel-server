@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db/farmilusion');
+const db = require('../db/maverickmarvel');
 const multer = require('multer');
 const upload = multer();
 
