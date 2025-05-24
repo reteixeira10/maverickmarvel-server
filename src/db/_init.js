@@ -1,4 +1,4 @@
-// This script initializes the SQLite database for the Farmilusion project.
+// This script initializes the SQLite database for the MaverickMarvel project.
 // It creates the necessary tables for products and product photos.
 // Run this script once to set up the database schema.
 
